@@ -9,6 +9,12 @@ import { Button } from "@/components/ui/button"
 const InviteButton = () => {
     const [open, setOpen] = React.useState(false)
     const {projectId} = useProject()
+    const [origin, setOrigin] = React.useState("");
+    React.useEffect(() => {
+        if (typeof window !== "undefined") {
+            setOrigin(window.location.origin);
+        }
+    }, []);
     return (
         <>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -22,8 +28,10 @@ const InviteButton = () => {
                         <Input
                             className="mt-4"
                             readOnly
-                            onClick={()=> {
-                                navigator.clipboard.writeText(`${window.location.origin}/join/${projectId}`)
+                            onClick={() => {
+                                if (typeof window !== "undefined") {
+                                    navigator.clipboard.writeText(`${window.location.origin}/join/${projectId}`);
+                                }
                                 toast.success("Link copied to clipboard")
                             }}
                             value={`${window.location.origin}/join/${projectId}`}
