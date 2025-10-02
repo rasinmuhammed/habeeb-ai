@@ -12,6 +12,8 @@ datasource db {
     extensions = [vector]
 }
 
+
+
 model User {
     id        String      @id @default(cuid())
     createdAt DateTime @default(now())

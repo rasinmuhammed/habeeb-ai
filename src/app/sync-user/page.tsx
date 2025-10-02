@@ -1,22 +1,23 @@
 import { db } from '@/server/db'
-import { auth, clerkClient, EmailAddress } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
+import { clerkClient } from '@clerk/nextjs/server'
 import { notFound, redirect } from 'next/navigation'
 
 const SyncUser = async () => {
-    const { userId } = await auth()
+    const { userId } = await auth() // Add await here
     if (!userId) {
         throw new Error('No user found')
     }
-    const client = await clerkClient()
+
+    const client = await clerkClient() // Clerk client needs await in newer versions
     const user = await client.users.getUser(userId)
 
-    if (!user.emailAddresses[0]?.emailAddress){
-        return notFound()
-    }
+    const email = user.emailAddresses[0]?.emailAddress
+    if (!email) return notFound()
 
     await db.user.upsert({
         where: {
-            emailAddress: user.emailAddresses[0]?.emailAddress ?? ""
+            emailAddress: email
         },
         update: {
             imageUrl: user.imageUrl,
@@ -25,11 +26,10 @@ const SyncUser = async () => {
         },
         create: {
             id: user.id,
-            emailAddress: user.emailAddresses[0]?.emailAddress ?? "",
+            emailAddress: email,
             imageUrl: user.imageUrl,
             firstName: user.firstName,
             lastName: user.lastName,
-
         }
     })
 
