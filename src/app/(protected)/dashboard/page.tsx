@@ -1,7 +1,7 @@
 'use client'
 import { useUser } from '@clerk/nextjs'
 import useProject from '@/hooks/use-project'
-import { ExternalLink, Github, Users, Archive } from 'lucide-react'
+import { ExternalLink, Github, Users, Archive, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import CommitLog from './commit-log'
 import AskQuestionCard from './ask-question-card'
@@ -10,10 +10,25 @@ import ArchiveButton from './archive-button'
 const InviteButton = dynamic(() => import('./invite-button'), { ssr: false });
 import TeamMembers from './team-members'
 import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
 
 const DashboardPage = () => {
     const { project } = useProject()
     const { user } = useUser()
+
+    if (!project) {
+        return (
+            <div className='min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center'>
+                <div className='text-center'>
+                    <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-violet-100 mb-4'>
+                        <AlertCircle className='w-8 h-8 text-violet-600' />
+                    </div>
+                    <h2 className='text-xl font-semibold text-gray-900 mb-2'>No Project Selected</h2>
+                    <p className='text-gray-600'>Please select or create a project to continue.</p>
+                </div>
+            </div>
+        )
+    }
     
     return (
         <div className='min-h-screen bg-gradient-to-b from-gray-50 to-white'>
@@ -71,8 +86,20 @@ const DashboardPage = () => {
                 {/* Main Cards Section */}
                 <div className='mb-8'>
                     <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-                        <AskQuestionCard/>
-                        <MeetingCard/>
+                        <Suspense fallback={
+                            <div className='bg-white rounded-xl border shadow-sm p-6 animate-pulse'>
+                                <div className='h-32 bg-gray-200 rounded'></div>
+                            </div>
+                        }>
+                            <AskQuestionCard/>
+                        </Suspense>
+                        <Suspense fallback={
+                            <div className='bg-white rounded-xl border shadow-sm p-6 animate-pulse'>
+                                <div className='h-32 bg-gray-200 rounded'></div>
+                            </div>
+                        }>
+                            <MeetingCard/>
+                        </Suspense>
                     </div>
                 </div>
 
