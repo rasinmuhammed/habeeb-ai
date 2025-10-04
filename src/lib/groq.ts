@@ -92,7 +92,13 @@ Give a summary no more than 100 words of the code above.`
 
 // Keep using Gemini for embeddings as Groq doesn't provide embedding models
 export async function generateEmbedding(summary: string) {
-    const result = await embeddingModel.embedContent(summary);
-    const embedding = result.embedding;
-    return embedding.values;
+    try {
+        const result = await embeddingModel.embedContent(summary);
+        const embedding = result.embedding;
+        return embedding.values;
+    } catch (error: any) {
+        console.error("Error generating embedding:", error.message);
+        // Return a zero vector as fallback (768 dimensions for text-embedding-004)
+        return new Array(768).fill(0);
+    }
 }

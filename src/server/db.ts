@@ -17,16 +17,6 @@ const globalForPrisma = globalThis as unknown as {
 
 export const db = globalForPrisma.prisma ?? createPrismaClient();
 
-// Handle connection errors gracefully
-db.$connect().catch((err) => {
-  console.error("Failed to connect to database:", err);
-});
-
 if (env.NODE_ENV !== "production") {
   globalForPrisma.prisma = db;
 }
-
-// Graceful shutdown
-process.on('beforeExit', async () => {
-  await db.$disconnect();
-});

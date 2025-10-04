@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { uploadFile } from "@/lib/supabase";
+import { uploadFile } from "@/utils/uploadFile";
 import { Presentation, Upload, CheckCircle, AlertCircle, FileAudio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
