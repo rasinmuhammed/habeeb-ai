@@ -44,7 +44,7 @@ export const aiSummariseCommit = async (diff: string) => {
 ${truncatedDiff}`
                 }
             ],
-            model: "llama-3.3-70b-versatile",
+            model: "meta-llama/llama-4-scout-17b-16e-instruct",
             temperature: 0.3,
             max_tokens: 300,
         });
@@ -78,7 +78,7 @@ ${code}
 Give a summary no more than 100 words of the code above.`
                 }
             ],
-            model: "llama-3.3-70b-versatile",
+            model: "meta-llama/llama-4-scout-17b-16e-instruct",
             temperature: 0.3,
             max_tokens: 150,
         });

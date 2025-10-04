@@ -60,7 +60,7 @@ AI assistant will not invent anything that is not drawn directly from the contex
 Answer in markdown syntax, with code snippets if needed. Be as detailed as possible when answering, make sure the dialogues are directly to the user in a conversational manner.`
                 }
             ],
-            model: "llama-3.3-70b-versatile",
+            model: "meta-llama/llama-4-scout-17b-16e-instruct",
             temperature: 0.5,
             max_tokens: 2000,
             stream: true,
