@@ -13,8 +13,28 @@
 - **🔍 Ask the Code (RAG-Powered Q&A)**: Utilize **Retrieval-Augmented Generation (RAG)** to query your codebase and get instant AI-powered answers to development questions.
 - **Team Collaboration**: Effortlessly invite team members and manage access.
 
+### Landing Page 
+<img width="1440" height="775" alt="Screenshot 2025-10-04 at 10 07 52 PM" src="https://github.com/user-attachments/assets/d74256f2-09cc-4d27-bbd7-07e7e8b2357e" />
+<img width="1440" height="775" alt="Screenshot 2025-10-04 at 10 02 27 PM" src="https://github.com/user-attachments/assets/ef4863e0-fbe4-47ee-a618-c1e89243c70d" />
+<img width="1440" height="773" alt="Screenshot 2025-10-04 at 10 01 58 PM" src="https://github.com/user-attachments/assets/7825796d-d972-45ed-b78f-8b17a8995ce6" />
+
+### Dashboard
+<img width="1440" height="776" alt="Screenshot 2025-10-04 at 10 03 09 PM" src="https://github.com/user-attachments/assets/48de3869-c975-418a-853b-3377a814d142" />
+<img width="1440" height="773" alt="Screenshot 2025-10-04 at 10 03 28 PM" src="https://github.com/user-attachments/assets/513320ec-b95c-4db0-8fac-4dec29415986" />
+
+### Meeting summarised into issues
+<img width="1440" height="777" alt="Screenshot 2025-10-04 at 10 03 59 PM" src="https://github.com/user-attachments/assets/a7932778-eecd-4f0d-9307-905a29bfa361" />
+
+### QnA with the codebase
+<img width="1440" height="777" alt="Screenshot 2025-10-04 at 10 04 29 PM" src="https://github.com/user-attachments/assets/911230e9-99b7-44ec-8826-6034bfc5cb56" />
+
+### Billing & Credits
+<img width="1440" height="774" alt="Screenshot 2025-10-04 at 10 04 58 PM" src="https://github.com/user-attachments/assets/77b74603-cc94-4ce9-aca0-75208b808bde" />
 
 ---
+## Interface
+
+
 
 ## 🛠️ Tech Stack
 
