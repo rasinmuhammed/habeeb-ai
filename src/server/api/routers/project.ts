@@ -1,8 +1,7 @@
 import { z } from "zod"
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc"
+import { createTRPCRouter, protectedProcedure } from "../trpc"
 import { pollCommits } from "@/lib/github"
 import { checkCredits, indexGithubRepo } from "@/lib/github-loader"
-import { CarTaxiFront } from "lucide-react"
 
 
 export const projectRouter = createTRPCRouter({
@@ -12,16 +11,16 @@ export const projectRouter = createTRPCRouter({
             githubUrl: z.string(),
             githubToken: z.string().optional()
         })
-    ).mutation(async ({ctx, input}) => {
-        const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! }, select: { credits: true }})
-        if (!user){
+    ).mutation(async ({ ctx, input }) => {
+        const user = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! }, select: { credits: true } })
+        if (!user) {
             throw new Error('User not found')
         }
 
         const currentCredits = user.credits || 0
         const fileCount = await checkCredits(input.githubUrl, input.githubToken)
 
-        if(currentCredits < fileCount ) {
+        if (currentCredits < fileCount) {
             throw new Error('Insufficient credits')
         }
 
@@ -38,13 +37,13 @@ export const projectRouter = createTRPCRouter({
             }
         })
 
-        await indexGithubRepo(project.id,input.githubUrl,input.githubToken)
+        await indexGithubRepo(project.id, input.githubUrl, input.githubToken)
         try {
             await pollCommits(project.id);
         } catch (error) {
             console.error(`Failed to poll commits for project ${project.id}:`, error);
         }
-       // Deduct credits & log transaction
+        // Deduct credits & log transaction
         await ctx.db.$transaction([
             ctx.db.user.update({
                 where: { id: ctx.user.userId! },
@@ -57,11 +56,11 @@ export const projectRouter = createTRPCRouter({
                 }
             })
         ]);
-        
+
         return project
     }),
 
-    getProjects: protectedProcedure.query( async ({ctx}) => {
+    getProjects: protectedProcedure.query(async ({ ctx }) => {
         return await ctx.db.project.findMany({
             where: {
                 userToProjects: {
@@ -76,28 +75,34 @@ export const projectRouter = createTRPCRouter({
 
     getCommits: protectedProcedure.input(z.object({
         projectId: z.string()
-    })).query(async ({ctx, input}) => {
-        pollCommits(input.projectId).then().catch(console.error)
-        return await ctx.db.commit.findMany({ where: { projectId: input.projectId }})
+    })).query(async ({ ctx, input }) => {
+        // Try to poll new commits in background - don't block on failure
+        pollCommits(input.projectId).catch(() => {
+            // Silently fail - GitHub token may be invalid
+        })
+        return await ctx.db.commit.findMany({
+            where: { projectId: input.projectId },
+            orderBy: { commitDate: 'desc' }
+        })
     }),
     saveAnswer: protectedProcedure.input(z.object({
         projectId: z.string(),
         question: z.string(),
         answer: z.string(),
         fileReferences: z.any()
-    })).mutation(async ({ctx, input}) => {
+    })).mutation(async ({ ctx, input }) => {
         return await ctx.db.question.create({
             data: {
-               answer: input.answer,
-               fileReferences: input.fileReferences,
-               projectId: input.projectId,
-               question: input.question,
-               userId: ctx.user.userId!
+                answer: input.answer,
+                fileReferences: input.fileReferences,
+                projectId: input.projectId,
+                question: input.question,
+                userId: ctx.user.userId!
             }
         })
     }),
-    getQuestions: protectedProcedure.input(z.object({projectId:z.string()}))
-        .query(async ({ctx, input}) => {
+    getQuestions: protectedProcedure.input(z.object({ projectId: z.string() }))
+        .query(async ({ ctx, input }) => {
             return await ctx.db.question.findMany({
                 where: {
                     projectId: input.projectId
@@ -111,8 +116,8 @@ export const projectRouter = createTRPCRouter({
 
             })
         }),
-        uploadMeeting: protectedProcedure.input(z.object({projectId: z.string(), meetingUrl: z.string(), name: z.string()}))
-        .mutation(async ({ctx, input}) => {
+    uploadMeeting: protectedProcedure.input(z.object({ projectId: z.string(), meetingUrl: z.string(), name: z.string() }))
+        .mutation(async ({ ctx, input }) => {
             const meeting = await ctx.db.meeting.create({
                 data: {
                     meetingUrl: input.meetingUrl,
@@ -123,56 +128,136 @@ export const projectRouter = createTRPCRouter({
             })
             return meeting
         }),
-        getMeetings: protectedProcedure.input(z.object({ projectId: z.string()})).query(async ({ctx, input}) => {
-            return await ctx.db.meeting.findMany({ where: { projectId: input.projectId}, include: { issues: true }})
-        }),
-        deleteMeeting: protectedProcedure.input(z.object({meetingId: z.string()})).mutation(async ({ctx, input}) => {
-            return await ctx.db.meeting.delete({ where: { id: input.meetingId}})
-        }),
-        getMeetingById: protectedProcedure.input(z.object({ meetingId: z.string() })).query( async ({ctx, input}) => {
-            return await ctx.db.meeting.findUnique({ where: { id: input.meetingId}, include: {issues:true }})
-        }),
-        archiveProject: protectedProcedure.input(z.object({projectId: z.string()})).mutation(async ({ctx, input}) => {
-            return await ctx.db.project.update({ where: {id: input.projectId }, data: {deletedAt: new Date()}})
-        }),
-        getTeamMembers: protectedProcedure.input(z.object({projectId: z.string() })).query(async ({ ctx, input }) => {
-            return await ctx.db.userToProject.findMany({ where: { projectId: input.projectId }, include: { user: true }})
-        }),
-        getMyCredits: protectedProcedure.query(async ({ctx}) => {
-            return await ctx.db.user.findUnique({ where: { id: ctx.user.userId!}, select: {credits: true}})
-        }),
-        checkCredits: protectedProcedure.input(z.object({githubUrl: z.string(), githubToken: z.string().optional()})).mutation(async ({ctx, input}) => {
-            const fileCount = await checkCredits(input.githubUrl, input.githubToken)
-            const userCredits = await ctx.db.user.findUnique({where: {id:ctx.user.userId!}, select: {credits: true}})
-            return { fileCount, userCredits: userCredits?.credits || 0}
-        }),
-        getTransactions: protectedProcedure.query(async ({ ctx }) => {
-            return await ctx.db.transaction.findMany({
-                where: { userId: ctx.user.userId! },
-                orderBy: { createdAt: "desc" }
-            });
-        }),
-        addMockTransaction: protectedProcedure.input(
-            z.object({
-                credits: z.number()
-            })
-        ).mutation(async ({ctx, input}) => {
-            await ctx.db.$transaction([
-                ctx.db.user.update({
-                    where: { id: ctx.user.userId! },
-                    data: { credits: { increment: input.credits } }
-                }),
-                ctx.db.transaction.create({
-                    data: {
-                        userId: ctx.user.userId!,
-                        credits: input.credits // Positive for purchases
-                    }
-                })
-            ]);
-        
-            return { success: true };
+    getMeetings: protectedProcedure.input(z.object({ projectId: z.string() })).query(async ({ ctx, input }) => {
+        return await ctx.db.meeting.findMany({ where: { projectId: input.projectId }, include: { issues: true } })
+    }),
+    deleteMeeting: protectedProcedure.input(z.object({ meetingId: z.string() })).mutation(async ({ ctx, input }) => {
+        return await ctx.db.meeting.delete({ where: { id: input.meetingId } })
+    }),
+    getMeetingById: protectedProcedure.input(z.object({ meetingId: z.string() })).query(async ({ ctx, input }) => {
+        return await ctx.db.meeting.findUnique({ where: { id: input.meetingId }, include: { issues: true } })
+    }),
+    archiveProject: protectedProcedure.input(z.object({ projectId: z.string() })).mutation(async ({ ctx, input }) => {
+        return await ctx.db.project.update({ where: { id: input.projectId }, data: { deletedAt: new Date() } })
+    }),
+    getTeamMembers: protectedProcedure.input(z.object({ projectId: z.string() })).query(async ({ ctx, input }) => {
+        return await ctx.db.userToProject.findMany({ where: { projectId: input.projectId }, include: { user: true } })
+    }),
+    getMyCredits: protectedProcedure.query(async ({ ctx }) => {
+        return await ctx.db.user.findUnique({ where: { id: ctx.user.userId! }, select: { credits: true } })
+    }),
+    checkCredits: protectedProcedure.input(z.object({ githubUrl: z.string(), githubToken: z.string().optional() })).mutation(async ({ ctx, input }) => {
+        const fileCount = await checkCredits(input.githubUrl, input.githubToken)
+        const userCredits = await ctx.db.user.findUnique({ where: { id: ctx.user.userId! }, select: { credits: true } })
+        return { fileCount, userCredits: userCredits?.credits || 0 }
+    }),
+    getTransactions: protectedProcedure.query(async ({ ctx }) => {
+        return await ctx.db.transaction.findMany({
+            where: { userId: ctx.user.userId! },
+            orderBy: { createdAt: "desc" }
+        });
+    }),
+    addMockTransaction: protectedProcedure.input(
+        z.object({
+            credits: z.number()
         })
-        
+    ).mutation(async ({ ctx, input }) => {
+        await ctx.db.$transaction([
+            ctx.db.user.update({
+                where: { id: ctx.user.userId! },
+                data: { credits: { increment: input.credits } }
+            }),
+            ctx.db.transaction.create({
+                data: {
+                    userId: ctx.user.userId!,
+                    credits: input.credits
+                }
+            })
+        ]);
 
-        
+        return { success: true };
+    }),
+
+    // Returns meetings where any issue's relatedFiles contains the given fileName
+    getMeetingsForFile: protectedProcedure
+        .input(z.object({ projectId: z.string(), fileName: z.string() }))
+        .query(async ({ ctx, input }) => {
+            const results = await ctx.db.$queryRaw<{
+                meetingId: string
+                meetingName: string
+                issueId: string
+                issueGist: string
+                createdAt: Date
+            }[]>`
+                SELECT DISTINCT
+                    m.id as "meetingId",
+                    m.name as "meetingName",
+                    i.id as "issueId",
+                    i.gist as "issueGist",
+                    m."createdAt"
+                FROM "Meeting" m
+                JOIN "Issue" i ON i."meetingId" = m.id
+                WHERE m."projectId" = ${input.projectId}
+                AND i."relatedFiles" IS NOT NULL
+                AND EXISTS (
+                    SELECT 1 FROM jsonb_array_elements(i."relatedFiles") AS elem
+                    WHERE elem->>'fileName' = ${input.fileName}
+                )
+                ORDER BY m."createdAt" DESC
+                LIMIT 5
+            `
+            return results
+        }),
+
+    // Returns meetings where any issue's relatedFiles contains any of the given fileNames
+    getMeetingsForFiles: protectedProcedure
+        .input(z.object({ projectId: z.string(), fileNames: z.array(z.string()).max(10) }))
+        .query(async ({ ctx, input }) => {
+            if (input.fileNames.length === 0) return []
+
+            const allResults: {
+                meetingId: string
+                meetingName: string
+                issueGist: string
+                createdAt: Date
+            }[] = []
+
+            for (const fileName of input.fileNames) {
+                const rows = await ctx.db.$queryRaw<{
+                    meetingId: string
+                    meetingName: string
+                    issueGist: string
+                    createdAt: Date
+                }[]>`
+                    SELECT DISTINCT
+                        m.id as "meetingId",
+                        m.name as "meetingName",
+                        i.gist as "issueGist",
+                        m."createdAt"
+                    FROM "Meeting" m
+                    JOIN "Issue" i ON i."meetingId" = m.id
+                    WHERE m."projectId" = ${input.projectId}
+                    AND i."relatedFiles" IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1 FROM jsonb_array_elements(i."relatedFiles") AS elem
+                        WHERE elem->>'fileName' = ${fileName}
+                    )
+                    ORDER BY m."createdAt" DESC
+                    LIMIT 3
+                `
+                allResults.push(...rows)
+            }
+
+            // Deduplicate by meetingId, most recent first
+            const seen = new Set<string>()
+            return allResults
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .filter(r => {
+                    if (seen.has(r.meetingId)) return false
+                    seen.add(r.meetingId)
+                    return true
+                })
+                .slice(0, 5)
+        }),
+
 })

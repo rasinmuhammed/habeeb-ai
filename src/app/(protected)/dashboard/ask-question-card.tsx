@@ -7,19 +7,30 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import React from "react"
 import { Dialog, DialogHeader, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import Image from "next/image"
+import { useSearchParams } from "next/navigation"
 import { askQuestion } from "./action"
 import { readStreamableValue } from "ai/rsc"
 import CodeReferences from "./code-references"
 import { api } from "@/trpc/react"
 import { toast } from "sonner"
 import useRefetch from "@/hooks/use-refetch"
-import { MessageSquare, Save, Loader2, Sparkles, Send } from "lucide-react"
+import { MessageSquare, Save, Loader2, Sparkles, Bot, FileCode2 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
-const AskQuestionCard = () => {
+const AskQuestionCardInner = () => {
     const { project } = useProject()
+    const searchParams = useSearchParams()
     const [open, setOpen] = React.useState(false)
     const [question, setQuestion] = React.useState('')
+
+    // Prefill from URL param (e.g. navigating from meeting detail "Ask HabeebAI" button)
+    React.useEffect(() => {
+        const prefill = searchParams.get('prefill')
+        if (prefill) {
+            setQuestion(decodeURIComponent(prefill))
+            window.history.replaceState({}, '', window.location.pathname)
+        }
+    }, [searchParams])
     const [loading, setLoading] = React.useState(false)
     const [fileReferences, setFileReferences] = React.useState<{ fileName: string; sourceCode: string; summary: string }[]>([])
     const [answer, setAnswer] = React.useState('')
@@ -49,21 +60,29 @@ const AskQuestionCard = () => {
     return (
         <>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-[85vw] max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-[85vw] max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
                     <DialogHeader>
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                                    <Image src='/logo.png' alt='habeebAI' height={24} width={24} />
+                                <motion.div
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                    className="w-12 h-12 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/25"
+                                >
+                                    <Bot className="h-6 w-6 text-white" />
+                                </motion.div>
+                                <div>
+                                    <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                                        AI Response
+                                    </DialogTitle>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Powered by HabeebAI</p>
                                 </div>
-                                <DialogTitle className="text-xl font-bold text-gray-900">
-                                    AI Response
-                                </DialogTitle>
                             </div>
                             <Button
                                 disabled={saveAnswer.isPending || loading}
                                 variant="outline"
-                                className="border-violet-200 text-violet-600 hover:bg-violet-50 hover:border-violet-300"
+                                className="border-violet-200 dark:border-violet-800 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950 hover:border-violet-300 rounded-xl"
                                 onClick={() =>
                                     saveAnswer.mutate({
                                         projectId: project!.id,
@@ -91,71 +110,114 @@ const AskQuestionCard = () => {
                     </DialogHeader>
 
                     <div className="mt-4">
-                        <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 mb-6">
-                            <p className="text-sm font-medium text-violet-900">
-                                <MessageSquare className="inline h-4 w-4 mr-2" />
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/20 dark:to-indigo-900/20 border border-violet-200 dark:border-violet-800 rounded-xl p-4 mb-6"
+                        >
+                            <p className="text-sm font-medium text-violet-900 dark:text-violet-200 flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4" />
                                 Your Question
                             </p>
-                            <p className="text-gray-700 mt-1">{question}</p>
+                            <p className="text-gray-700 dark:text-gray-300 mt-2 font-medium">{question}</p>
+                        </motion.div>
+
+                        <div data-color-mode="light" className="prose prose-violet max-w-none dark:prose-invert">
+                            <AnimatePresence mode="wait">
+                                {loading && !answer && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="flex items-center gap-3 text-violet-600 dark:text-violet-400 py-4"
+                                    >
+                                        <div className="flex gap-1">
+                                            <motion.div
+                                                animate={{ y: [0, -8, 0] }}
+                                                transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
+                                                className="w-2 h-2 bg-violet-600 rounded-full"
+                                            />
+                                            <motion.div
+                                                animate={{ y: [0, -8, 0] }}
+                                                transition={{ repeat: Infinity, duration: 0.6, delay: 0.1 }}
+                                                className="w-2 h-2 bg-violet-600 rounded-full"
+                                            />
+                                            <motion.div
+                                                animate={{ y: [0, -8, 0] }}
+                                                transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
+                                                className="w-2 h-2 bg-violet-600 rounded-full"
+                                            />
+                                        </div>
+                                        <span className="font-medium">AI is analyzing your codebase...</span>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                            <MDEditor.Markdown source={answer || (loading ? "" : "Waiting for response...")} />
                         </div>
 
-                        <div data-color-mode="light" className="prose prose-violet max-w-none">
-                            {loading && !answer && (
-                                <div className="flex items-center gap-2 text-violet-600">
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                    <span>AI is thinking...</span>
-                                </div>
+                        <AnimatePresence>
+                            {fileReferences.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="mt-6"
+                                >
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+                                            <FileCode2 className="h-5 w-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Referenced Files</h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{fileReferences.length} files analyzed</p>
+                                        </div>
+                                    </div>
+                                    <CodeReferences fileReferences={fileReferences} />
+                                </motion.div>
                             )}
-                            <MDEditor.Markdown source={answer || "Waiting for response..."} />
-                        </div>
-
-                        {fileReferences.length > 0 && (
-                            <div className="mt-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <div className="w-1 h-6 bg-violet-600 rounded-full" />
-                                    <h3 className="text-lg font-semibold text-gray-900">Referenced Files</h3>
-                                </div>
-                                <CodeReferences fileReferences={fileReferences} />
-                            </div>
-                        )}
+                        </AnimatePresence>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            <Card className="relative border-2 border-gray-200 hover:border-violet-300 transition-all shadow-sm hover:shadow-md">
-                <CardHeader className="pb-4">
+            <Card className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden group">
+                {/* Decorative gradient */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/10 to-indigo-500/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
+
+                <CardHeader className="pb-4 relative">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                            <MessageSquare className="h-5 w-5 text-white" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/20">
+                            <MessageSquare className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-gray-900">Ask a Question</h3>
-                            <p className="text-sm text-gray-600">Get instant AI-powered answers about your code</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Ask a Question</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Get instant AI-powered answers about your code</p>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="relative">
                     <form onSubmit={onSubmit} className="space-y-4">
                         <Textarea
                             placeholder="Which file should I edit to change the homepage?"
                             value={question}
                             onChange={e => setQuestion(e.target.value)}
-                            className="min-h-[100px] border-2 focus:border-violet-500 resize-none"
+                            className="min-h-[120px] border-2 border-gray-200 dark:border-gray-700 focus:border-violet-500 dark:focus:border-violet-400 resize-none rounded-xl bg-gray-50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 transition-colors"
                             required
                         />
                         <Button
                             type="submit"
                             disabled={loading || !question.trim()}
-                            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all"
+                            size="lg"
+                            className="w-full h-12 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all rounded-xl"
                         >
                             {loading ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Processing...
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Thinking...
                                 </>
                             ) : (
                                 <>
-                                    <Sparkles className="mr-2 h-4 w-4" />
+                                    <Sparkles className="mr-2 h-5 w-5" />
                                     Ask HabeebAI
                                 </>
                             )}
@@ -166,5 +228,26 @@ const AskQuestionCard = () => {
         </>
     )
 }
+
+// Suspense wrapper so useSearchParams never triggers the Next.js CSR bailout error
+const AskQuestionCardSkeleton = () => (
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 animate-pulse space-y-4">
+        <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-2xl" />
+            <div className="space-y-2 flex-1">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+            </div>
+        </div>
+        <div className="h-28 bg-gray-100 dark:bg-gray-800 rounded-xl" />
+        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+    </div>
+)
+
+const AskQuestionCard = () => (
+    <React.Suspense fallback={<AskQuestionCardSkeleton />}>
+        <AskQuestionCardInner />
+    </React.Suspense>
+)
 
 export default AskQuestionCard

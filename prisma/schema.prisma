@@ -111,6 +111,8 @@ model Issue {
     headline String
     summary String
 
+    relatedFiles Json?
+
     meetingId String
     meeting Meeting @relation(fields: [meetingId], references: [id])
 

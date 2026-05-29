@@ -44,3 +44,6 @@ yarn-error.log*
 
 # idea files
 .idea
+
+# product documentation (local only, not for version control)
+PRODUCT.md
