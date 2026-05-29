@@ -28,8 +28,8 @@ export default function Home() {
             <Link href="#features" className="text-gray-600 hover:text-violet-600 transition-colors font-medium">
               How it Works
             </Link>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="text-gray-700 hover:text-violet-600"
               onClick={() => setShowSignIn(true)}
             >
@@ -41,7 +41,7 @@ export default function Home() {
               </Button>
             </Link>
           </nav>
-          
+
           {/* Mobile menu button */}
           <div className="md:hidden">
             <Link href="/sign-up">
@@ -68,7 +68,8 @@ export default function Home() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h2>
                 <p className="text-gray-600">Sign in to continue to HabeebAI</p>
               </div>
-              <SignIn 
+              <SignIn
+                routing="hash"
                 appearance={{
                   elements: {
                     formButtonPrimary: "bg-violet-600 hover:bg-violet-700",
@@ -80,7 +81,6 @@ export default function Home() {
                     footerActionLink: "text-violet-600 hover:text-violet-700"
                   }
                 }}
-                redirectUrl="/sync-user"
                 signUpUrl="/sign-up"
               />
             </div>
@@ -94,19 +94,19 @@ export default function Home() {
           <Zap className="h-4 w-4" />
           AI-Powered Code Intelligence
         </div>
-        
+
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
           Understand Your Codebase<br />
           <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
             in Minutes, Not Hours
           </span>
         </h1>
-        
+
         <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-          HabeebAI helps you onboard faster, debug smarter, and collaborate better 
+          HabeebAI helps you onboard faster, debug smarter, and collaborate better
           with AI-powered insights from your entire codebase.
         </p>
-        
+
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
           <Link href="/sign-up">
             <Button size="lg" className="bg-violet-600 hover:bg-violet-700 text-base px-8 py-6 shadow-lg hover:shadow-xl transition-all">
@@ -157,7 +157,7 @@ export default function Home() {
               Ask Questions
             </h3>
             <p className="text-gray-600 leading-relaxed">
-              Get instant, contextual answers about any part of your codebase. 
+              Get instant, contextual answers about any part of your codebase.
               Like having a senior developer on call 24/7.
             </p>
           </div>
@@ -170,7 +170,7 @@ export default function Home() {
               Commit Analysis
             </h3>
             <p className="text-gray-600 leading-relaxed">
-              Automatic summaries of every commit. Understand what changed 
+              Automatic summaries of every commit. Understand what changed
               and why without reading through diffs.
             </p>
           </div>
@@ -183,7 +183,7 @@ export default function Home() {
               Meeting Insights
             </h3>
             <p className="text-gray-600 leading-relaxed">
-              Upload team meetings and get AI-generated summaries with 
+              Upload team meetings and get AI-generated summaries with
               action items and key decisions highlighted.
             </p>
           </div>

@@ -60,7 +60,7 @@ export function AppSidebar() {
     const refetch = useRefetch()
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
-    
+
     const archiveProject = api.project.archiveProject.useMutation()
 
     const handleProjectClick = (id: string) => {
@@ -98,11 +98,11 @@ export function AppSidebar() {
             <Sidebar collapsible="icon" variant="floating">
                 <SidebarHeader>
                     <Link href="/" className="flex items-center gap-2 group">
-                        <Image 
-                            src='/logo.png' 
-                            alt='logo' 
-                            width={40} 
-                            height={40} 
+                        <Image
+                            src='/logo.png'
+                            alt='logo'
+                            width={40}
+                            height={40}
                             className="transition-transform group-hover:scale-110"
                         />
                         {open && (
@@ -114,7 +114,7 @@ export function AppSidebar() {
                 </SidebarHeader>
                 <SidebarContent>
                     <SidebarGroup>
-                        <SidebarGroupLabel>
+                        <SidebarGroupLabel className="text-gray-500 dark:text-gray-400">
                             Application
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
@@ -125,7 +125,7 @@ export function AppSidebar() {
                                             <SidebarMenuButton asChild>
                                                 <Link href={item.url} className={cn({
                                                     '!bg-gradient-to-r from-violet-600 to-indigo-600 !text-white': pathname === item.url
-                                                }, 'list-none hover:bg-violet-50 transition-all group')}>
+                                                }, 'list-none hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all group text-gray-700 dark:text-gray-300')}>
                                                     <item.icon className={cn(
                                                         "transition-transform group-hover:scale-110",
                                                         pathname === item.url && "text-white"
@@ -140,7 +140,7 @@ export function AppSidebar() {
                         </SidebarGroupContent>
                     </SidebarGroup>
                     <SidebarGroup>
-                        <SidebarGroupLabel>
+                        <SidebarGroupLabel className="text-gray-500 dark:text-gray-400">
                             Your Projects
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
@@ -152,10 +152,10 @@ export function AppSidebar() {
                                                 <SidebarMenuButton asChild className="flex-1">
                                                     <div
                                                         onClick={() => handleProjectClick(project.id)}
-                                                        className="cursor-pointer hover:bg-violet-50 transition-all rounded-lg"
+                                                        className="cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all rounded-lg"
                                                     >
                                                         <div className={cn(
-                                                            'rounded-lg border size-8 flex items-center justify-center text-sm bg-white text-violet-600 font-semibold transition-all',
+                                                            'rounded-lg border size-8 flex items-center justify-center text-sm bg-white dark:bg-gray-800 text-violet-600 dark:text-violet-400 font-semibold transition-all border-gray-200 dark:border-gray-700',
                                                             {
                                                                 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white border-violet-600 scale-110': project.id === projectId
                                                             }
@@ -163,9 +163,9 @@ export function AppSidebar() {
                                                             {project.name[0]?.toUpperCase()}
                                                         </div>
                                                         <span className={cn(
-                                                            'font-medium transition-colors',
+                                                            'font-medium transition-colors text-gray-700 dark:text-gray-300',
                                                             {
-                                                                'text-violet-600': project.id === projectId
+                                                                'text-violet-600 dark:text-violet-400': project.id === projectId
                                                             }
                                                         )}>{project.name}</span>
                                                     </div>
@@ -176,15 +176,15 @@ export function AppSidebar() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600"
+                                                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
                                                             >
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
+                                                        <DropdownMenuContent align="end" className="dark:bg-gray-900 dark:border-gray-800">
                                                             <DropdownMenuItem
                                                                 onClick={(e) => handleDeleteClick(e, project)}
-                                                                className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                                                                className="text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/30 cursor-pointer"
                                                             >
                                                                 <Trash2 className="h-4 w-4 mr-2" />
                                                                 Delete Project
@@ -200,7 +200,7 @@ export function AppSidebar() {
                                 {open && (
                                     <SidebarMenuItem>
                                         <Link href='/create' className="w-full">
-                                            <Button size='sm' variant={'outline'} className="w-full border-violet-200 text-violet-600 hover:bg-gradient-to-r hover:from-violet-600 hover:to-indigo-600 hover:text-white hover:border-violet-600 transition-all group">
+                                            <Button size='sm' variant={'outline'} className="w-full border-violet-200 dark:border-violet-800 text-violet-600 dark:text-violet-400 hover:bg-gradient-to-r hover:from-violet-600 hover:to-indigo-600 hover:text-white hover:border-violet-600 transition-all group">
                                                 <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform" />
                                                 Create Project
                                             </Button>

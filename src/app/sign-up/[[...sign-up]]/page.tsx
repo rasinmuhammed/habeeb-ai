@@ -17,8 +17,8 @@ export default function SignUpPage() {
               HabeebAI
             </span>
           </Link>
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="text-gray-600 hover:text-violet-600 transition-colors font-medium flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -31,7 +31,7 @@ export default function SignUpPage() {
       <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
         <div className="w-full max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-            
+
             {/* Left Side - Benefits (Hidden on mobile, shown on desktop) */}
             <div className="hidden lg:block space-y-6">
               <div>
@@ -115,8 +115,9 @@ export default function SignUpPage() {
                     Start understanding your codebase today
                   </p>
                 </div>
-                
-                <SignUp 
+
+                <SignUp
+                  routing="hash"
                   appearance={{
                     elements: {
                       formButtonPrimary: "bg-violet-600 hover:bg-violet-700 text-white shadow-sm hover:shadow transition-all",
@@ -132,7 +133,6 @@ export default function SignUpPage() {
                       formFieldLabel: "text-gray-700 font-medium"
                     }
                   }}
-                  redirectUrl="/sync-user"
                   signInUrl="/"
                 />
               </div>
