@@ -179,6 +179,72 @@ export const projectRouter = createTRPCRouter({
         return { success: true };
     }),
 
+    // Unified chronological feed: commits + meetings + Q&A merged and sorted by date
+    getTimeline: protectedProcedure
+        .input(z.object({ projectId: z.string() }))
+        .query(async ({ ctx, input }) => {
+            const [commits, meetings, questions] = await Promise.all([
+                ctx.db.commit.findMany({
+                    where: { projectId: input.projectId },
+                    orderBy: { commitDate: 'desc' },
+                    take: 50
+                }),
+                ctx.db.meeting.findMany({
+                    where: { projectId: input.projectId },
+                    include: { issues: { select: { id: true, relatedFiles: true } } },
+                    orderBy: { createdAt: 'desc' }
+                }),
+                ctx.db.question.findMany({
+                    where: { projectId: input.projectId },
+                    include: {
+                        user: { select: { firstName: true, lastName: true, imageUrl: true } }
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: 30
+                })
+            ])
+
+            const events = [
+                ...commits.map(c => ({
+                    type: 'commit' as const,
+                    id: c.id,
+                    date: c.commitDate,
+                    hash: c.commitHash,
+                    message: c.commitMessage,
+                    summary: c.summary,
+                    author: c.commitAuthorName,
+                    authorAvatar: c.commitAuthorAvatar,
+                })),
+                ...meetings.map(m => ({
+                    type: 'meeting' as const,
+                    id: m.id,
+                    date: m.createdAt,
+                    name: m.name,
+                    status: m.status,
+                    issueCount: m.issues.length,
+                    linkedCount: m.issues.filter(i =>
+                        Array.isArray(i.relatedFiles) && (i.relatedFiles as unknown[]).length > 0
+                    ).length,
+                })),
+                ...questions.map(q => ({
+                    type: 'qa' as const,
+                    id: q.id,
+                    date: q.createdAt,
+                    question: q.question,
+                    answer: q.answer.slice(0, 200),
+                    userName: q.user.firstName
+                        ? `${q.user.firstName}${q.user.lastName ? ` ${q.user.lastName}` : ''}`
+                        : 'Unknown',
+                    userAvatar: q.user.imageUrl ?? '',
+                    fileCount: Array.isArray(q.fileReferences)
+                        ? (q.fileReferences as unknown[]).length
+                        : 0,
+                }))
+            ]
+
+            return events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        }),
+
     // Returns meetings where any issue's relatedFiles contains the given fileName
     getMeetingsForFile: protectedProcedure
         .input(z.object({ projectId: z.string(), fileName: z.string() }))
