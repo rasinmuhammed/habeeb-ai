@@ -9,6 +9,7 @@ import MDEditor from '@uiw/react-md-editor'
 import CodeReferences from '../dashboard/code-references'
 import { MessageSquare, Clock, Sparkles, Video, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { DecisionTrailView } from '@/components/decision-trail-view'
 
 // Shows which meetings referenced a set of code files — the reverse link
 function MeetingContext({ fileNames, projectId }: { fileNames: string[]; projectId: string }) {
@@ -58,6 +59,11 @@ const QAPage = () => {
         const refs = question.fileReferences as { fileName: string }[]
         return refs.map(f => f.fileName).filter(Boolean)
     }, [question?.fileReferences])
+
+    const { data: decisionTrail } = api.project.getDecisionTrail.useQuery(
+        { projectId, fileNames },
+        { enabled: fileNames.length > 0 }
+    )
 
     return (
         <div className='min-h-screen bg-gradient-to-b from-gray-50 to-white p-8'>
@@ -198,6 +204,11 @@ const QAPage = () => {
                                                     fileNames={fileNames}
                                                     projectId={projectId}
                                                 />
+
+                                                {/* Decision Trail: commits, meetings, prior Q&A for these files */}
+                                                {decisionTrail && (
+                                                    <DecisionTrailView trail={decisionTrail} />
+                                                )}
                                             </>
                                         )}
                                     </SheetHeader>

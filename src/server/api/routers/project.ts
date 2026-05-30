@@ -2,6 +2,7 @@ import { z } from "zod"
 import { createTRPCRouter, protectedProcedure } from "../trpc"
 import { pollCommits } from "@/lib/github"
 import { checkCredits, indexGithubRepo } from "@/lib/github-loader"
+import { fetchDecisionTrail } from "@/lib/decision-trail"
 
 
 export const projectRouter = createTRPCRouter({
@@ -207,6 +208,13 @@ export const projectRouter = createTRPCRouter({
                 LIMIT 5
             `
             return results
+        }),
+
+    // Returns the full decision trail for a set of files — used in saved Q&A view
+    getDecisionTrail: protectedProcedure
+        .input(z.object({ projectId: z.string(), fileNames: z.array(z.string()).max(10) }))
+        .query(async ({ input }) => {
+            return fetchDecisionTrail(input.fileNames, input.projectId)
         }),
 
     // Returns meetings where any issue's relatedFiles contains any of the given fileNames
