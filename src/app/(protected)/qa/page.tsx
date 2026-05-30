@@ -7,9 +7,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import AskQuestionCard from '../dashboard/ask-question-card'
 import MDEditor from '@uiw/react-md-editor'
 import CodeReferences from '../dashboard/code-references'
-import { MessageSquare, Clock, Sparkles, Video, ExternalLink } from 'lucide-react'
+import { MessageSquare, Clock, Sparkles, Video, ExternalLink, Share2, Check, Link2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { DecisionTrailView } from '@/components/decision-trail-view'
+import { toast } from 'sonner'
+import useRefetch from '@/hooks/use-refetch'
 
 // Shows which meetings referenced a set of code files — the reverse link
 function MeetingContext({ fileNames, projectId }: { fileNames: string[]; projectId: string }) {
@@ -45,6 +48,45 @@ function MeetingContext({ fileNames, projectId }: { fileNames: string[]; project
                 ))}
             </div>
         </div>
+    )
+}
+
+function ShareButton({ questionId, isPublic }: { questionId: string; isPublic: boolean }) {
+    const toggle = api.project.toggleAnswerPublic.useMutation()
+    const refetch = useRefetch()
+    const [copied, setCopied] = React.useState(false)
+
+    const shareUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/share/${questionId}`
+        : `/share/${questionId}`
+
+    const handleShare = async () => {
+        if (!isPublic) {
+            await toggle.mutateAsync({ questionId })
+            refetch()
+        }
+        await navigator.clipboard.writeText(shareUrl)
+        setCopied(true)
+        toast.success(isPublic ? 'Link copied!' : 'Answer shared — link copied!')
+        setTimeout(() => setCopied(false), 2000)
+    }
+
+    return (
+        <Button
+            size="sm"
+            variant="outline"
+            onClick={handleShare}
+            disabled={toggle.isPending}
+            className="h-8 text-xs gap-1.5 border-gray-200 text-gray-600 hover:border-violet-300 hover:text-violet-600 rounded-lg"
+        >
+            {copied
+                ? <Check className="h-3.5 w-3.5 text-green-500" />
+                : isPublic
+                    ? <Link2 className="h-3.5 w-3.5" />
+                    : <Share2 className="h-3.5 w-3.5" />
+            }
+            {copied ? 'Copied!' : isPublic ? 'Copy link' : 'Share'}
+        </Button>
     )
 }
 
@@ -145,6 +187,12 @@ const QAPage = () => {
                                                             {(q.fileReferences as any[]).length} files
                                                         </span>
                                                     )}
+                                                    {q.isPublic && (
+                                                        <span className='px-2 py-1 bg-green-50 rounded-md text-xs text-green-600 border border-green-100 flex items-center gap-1'>
+                                                            <Link2 className='h-3 w-3' />
+                                                            Shared
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -164,17 +212,20 @@ const QAPage = () => {
                                                 alt='avatar'
                                             />
                                             <div className='flex-1'>
-                                                <div className='flex items-center gap-2 mb-2'>
-                                                    <span className='text-sm font-medium text-gray-700'>
-                                                        {question.user.firstName} {question.user.lastName}
-                                                    </span>
-                                                    <span className='text-xs text-gray-400'>·</span>
-                                                    <span className='text-xs text-gray-400'>
-                                                        {new Date(question.createdAt).toLocaleDateString('en-US', {
-                                                            month: 'long', day: 'numeric', year: 'numeric',
-                                                            hour: '2-digit', minute: '2-digit'
-                                                        })}
-                                                    </span>
+                                                <div className='flex items-center justify-between gap-2 mb-2'>
+                                                    <div className='flex items-center gap-2'>
+                                                        <span className='text-sm font-medium text-gray-700'>
+                                                            {question.user.firstName} {question.user.lastName}
+                                                        </span>
+                                                        <span className='text-xs text-gray-400'>·</span>
+                                                        <span className='text-xs text-gray-400'>
+                                                            {new Date(question.createdAt).toLocaleDateString('en-US', {
+                                                                month: 'long', day: 'numeric', year: 'numeric',
+                                                                hour: '2-digit', minute: '2-digit'
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    <ShareButton questionId={question.id} isPublic={question.isPublic} />
                                                 </div>
                                                 <SheetTitle className='text-2xl font-bold text-gray-900 leading-tight'>
                                                     {question.question}

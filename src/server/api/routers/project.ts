@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { createTRPCRouter, protectedProcedure } from "../trpc"
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc"
 import { pollCommits } from "@/lib/github"
 import { checkCredits, indexGithubRepo } from "@/lib/github-loader"
 import { fetchDecisionTrail } from "@/lib/decision-trail"
@@ -274,6 +274,62 @@ export const projectRouter = createTRPCRouter({
                 LIMIT 5
             `
             return results
+        }),
+
+    // Toggle public sharing for a saved answer
+    toggleAnswerPublic: protectedProcedure
+        .input(z.object({ questionId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const question = await ctx.db.question.findUnique({
+                where: { id: input.questionId },
+                select: { userId: true, isPublic: true }
+            })
+            if (!question || question.userId !== ctx.user.userId!) {
+                throw new Error('Not authorized')
+            }
+            return ctx.db.question.update({
+                where: { id: input.questionId },
+                data: { isPublic: !question.isPublic },
+                select: { id: true, isPublic: true }
+            })
+        }),
+
+    // Public — fetch a shared answer without auth (only if isPublic)
+    getPublicAnswer: publicProcedure
+        .input(z.object({ questionId: z.string() }))
+        .query(async ({ ctx, input }) => {
+            const question = await ctx.db.question.findUnique({
+                where: { id: input.questionId, isPublic: true },
+                include: {
+                    user: { select: { firstName: true, lastName: true, imageUrl: true } },
+                    project: { select: { name: true } }
+                }
+            })
+            if (!question) return null
+
+            const fileRefs = Array.isArray(question.fileReferences)
+                ? (question.fileReferences as { fileName: string; summary: string }[]).map(f => ({
+                    fileName: f.fileName,
+                    summary: f.summary
+                }))
+                : []
+
+            const fileNames = fileRefs.map(f => f.fileName).filter(Boolean)
+            const trail = await fetchDecisionTrail(fileNames, question.projectId)
+
+            return {
+                id: question.id,
+                question: question.question,
+                answer: question.answer,
+                createdAt: question.createdAt,
+                fileReferences: fileRefs,
+                userName: question.user.firstName
+                    ? `${question.user.firstName}${question.user.lastName ? ` ${question.user.lastName}` : ''}`
+                    : 'A developer',
+                userAvatar: question.user.imageUrl ?? '',
+                projectName: question.project.name,
+                trail
+            }
         }),
 
     // Returns the full decision trail for a set of files — used in saved Q&A view

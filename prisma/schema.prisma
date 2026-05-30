@@ -131,6 +131,7 @@ model Question {
     answer String
 
     fileReferences Json?
+    isPublic       Boolean @default(false)
 
     projectId String
     project Project @relation(fields: [projectId], references: [id])
