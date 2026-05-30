@@ -2,7 +2,7 @@
 
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarHeader, SidebarMenuItem, SidebarMenuButton, SidebarMenu, useSidebar } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Bot, Presentation, CreditCard, Plus, Trash2, MoreVertical, History } from "lucide-react"
+import { LayoutDashboard, Bot, Presentation, CreditCard, Plus, Trash2, MoreVertical, History, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -49,6 +49,11 @@ const items = [
         title: 'Timeline',
         url: '/timeline',
         icon: History,
+    },
+    {
+        title: 'Onboarding',
+        url: '/onboarding',
+        icon: BookOpen,
     },
     {
         title: 'Billing',

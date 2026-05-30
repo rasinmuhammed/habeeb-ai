@@ -276,6 +276,36 @@ export const projectRouter = createTRPCRouter({
             return results
         }),
 
+    // ── Onboarding Guides ────────────────────────────────────────────────────
+
+    saveOnboardingGuide: protectedProcedure
+        .input(z.object({ projectId: z.string(), role: z.string(), content: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            return ctx.db.onboardingGuide.create({
+                data: {
+                    projectId: input.projectId,
+                    role: input.role,
+                    content: input.content,
+                }
+            })
+        }),
+
+    getOnboardingGuides: protectedProcedure
+        .input(z.object({ projectId: z.string() }))
+        .query(async ({ ctx, input }) => {
+            return ctx.db.onboardingGuide.findMany({
+                where: { projectId: input.projectId },
+                orderBy: { createdAt: 'desc' },
+                select: { id: true, role: true, createdAt: true, content: true }
+            })
+        }),
+
+    deleteOnboardingGuide: protectedProcedure
+        .input(z.object({ guideId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            return ctx.db.onboardingGuide.delete({ where: { id: input.guideId } })
+        }),
+
     // Toggle public sharing for a saved answer
     toggleAnswerPublic: protectedProcedure
         .input(z.object({ questionId: z.string() }))
